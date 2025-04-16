@@ -1,6 +1,5 @@
 package test;
 
-import com.codeborne.selenide.Configuration;
 import data.DataGenerator.RegistrationDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,6 @@ public class DeliveryTest {
 
     @BeforeEach
     void setup() {
-        Configuration.headless = false;
         open("http://localhost:9999");
     }
 
@@ -38,29 +36,36 @@ public class DeliveryTest {
     @Test
     void shouldShowErrorIfLoginInvalid() {
         RegistrationDto user = createActiveUser();
-        $("[data-test-id=login] input").setValue("invalidLogin");
+        $("[data-test-id=login] input").setValue(getRandomLogin());
         $("[data-test-id=password] input").setValue(user.getPassword());
         $("[data-test-id=action-login]").click();
-        $("[data-test-id=error-notification]").shouldBe(visible);
+        $("[data-test-id=error-notification] .notification__content")
+            .shouldBe(visible)
+            .shouldHave(text("Ошибка! Неверно указан логин или пароль"));
     }
 
     @Test
     void shouldShowErrorIfPasswordInvalid() {
         RegistrationDto user = createActiveUser();
         $("[data-test-id=login] input").setValue(user.getLogin());
-        $("[data-test-id=password] input").setValue("invalidPassword");
+        $("[data-test-id=password] input").setValue(getRandomPassword());
         $("[data-test-id=action-login]").click();
-        $("[data-test-id=error-notification]").shouldBe(visible);
+        $("[data-test-id=error-notification] .notification__content")
+            .shouldBe(visible)
+            .shouldHave(text("Ошибка! Неверно указан логин или пароль"));
     }
 
     @Test
     void shouldRewriteUserWithSameLogin() {
-        String reusedLogin = "someUser";
-        RegistrationDto firstUser = new RegistrationDto(reusedLogin, "firstPassword", "active");
-        RegistrationDto secondUser = new RegistrationDto(reusedLogin, "secondPassword", "active");
+        String reusedLogin = getRandomLogin();
+        String password1 = getRandomPassword();
+        String password2 = getRandomPassword();
 
-        registerUser(firstUser);  // регистрируем через метод из DataGenerator
-        registerUser(secondUser); // перезаписываем
+        RegistrationDto firstUser = generateUserWithLogin(reusedLogin, password1, "active");
+        RegistrationDto secondUser = generateUserWithLogin(reusedLogin, password2, "active");
+
+        registerUser(firstUser);
+        registerUser(secondUser);
 
         open("http://localhost:9999");
         $("[data-test-id=login] input").setValue(secondUser.getLogin());

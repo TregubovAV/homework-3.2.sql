@@ -57,4 +57,16 @@ public class DataGenerator {
         .then()
             .statusCode(200);
     }
+
+    public static String getRandomLogin() {
+        return faker.name().username();
+    }
+    
+    public static String getRandomPassword() {
+        return faker.internet().password();
+    }
+
+    public static RegistrationDto generateUserWithLogin(String login, String password, String status) {
+        return new RegistrationDto(login, password, status);
+    }
 }

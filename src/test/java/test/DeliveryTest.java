@@ -8,20 +8,8 @@ import org.junit.jupiter.api.Test;
 import static com.codeborne.selenide.Selenide.*;
 import static com.codeborne.selenide.Condition.*;
 import static data.DataGenerator.*;
-import static io.restassured.RestAssured.*;
-import static io.restassured.http.ContentType.JSON;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.filter.log.LogDetail;
 
 public class DeliveryTest {
-    private static final RequestSpecification requestSpec = new RequestSpecBuilder()
-            .setBaseUri("http://localhost")
-            .setPort(9999)
-            .setAccept(JSON)
-            .setContentType(JSON)
-            .log(LogDetail.ALL)
-            .build();
 
     @BeforeEach
     void setup() {
@@ -71,23 +59,8 @@ public class DeliveryTest {
         RegistrationDto firstUser = new RegistrationDto(reusedLogin, "firstPassword", "active");
         RegistrationDto secondUser = new RegistrationDto(reusedLogin, "secondPassword", "active");
 
-        // Сначала создаём первого пользователя
-        given()
-            .spec(requestSpec)
-            .body(firstUser)
-        .when()
-            .post("/api/system/users")
-        .then()
-            .statusCode(200);
-
-        // Перезаписываем его новыми данными
-        given()
-            .spec(requestSpec)
-            .body(secondUser)
-        .when()
-            .post("/api/system/users")
-        .then()
-            .statusCode(200);
+        registerUser(firstUser);  // регистрируем через метод из DataGenerator
+        registerUser(secondUser); // перезаписываем
 
         open("http://localhost:9999");
         $("[data-test-id=login] input").setValue(secondUser.getLogin());

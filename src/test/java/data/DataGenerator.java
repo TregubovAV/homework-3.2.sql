@@ -4,11 +4,13 @@ import com.github.javafaker.Faker;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.builder.RequestSpecBuilder;
+import lombok.Value;
 
 import static io.restassured.RestAssured.given;
 
 public class DataGenerator {
     private static final Faker faker = new Faker();
+
     private static final RequestSpecification requestSpec = new RequestSpecBuilder()
             .setBaseUri("http://localhost")
             .setPort(9999)
@@ -17,45 +19,24 @@ public class DataGenerator {
             .log(io.restassured.filter.log.LogDetail.ALL)
             .build();
 
+    @Value
     public static class RegistrationDto {
-        private final String login;
-        private final String password;
-        private final String status;
-
-        public RegistrationDto(String login, String password, String status) {
-            this.login = login;
-            this.password = password;
-            this.status = status;
-        }
-
-        public String getLogin() {
-            return login;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public String getStatus() {
-            return status;
-        }
+        String login;
+        String password;
+        String status;
     }
 
-    public static RegistrationDto createUser(String status) {
-        RegistrationDto user = new RegistrationDto(
+    public static RegistrationDto generateUser(String status) {
+        return new RegistrationDto(
                 faker.name().username(),
                 faker.internet().password(),
                 status
         );
+    }
 
-        given()
-            .spec(requestSpec)
-            .body(user)
-        .when()
-            .post("/api/system/users")
-        .then()
-            .statusCode(200);
-
+    public static RegistrationDto createUser(String status) {
+        RegistrationDto user = generateUser(status);
+        registerUser(user);
         return user;
     }
 
@@ -65,5 +46,15 @@ public class DataGenerator {
 
     public static RegistrationDto createBlockedUser() {
         return createUser("blocked");
+    }
+
+    public static void registerUser(RegistrationDto user) {
+        given()
+            .spec(requestSpec)
+            .body(user)
+        .when()
+            .post("/api/system/users")
+        .then()
+            .statusCode(200);
     }
 }

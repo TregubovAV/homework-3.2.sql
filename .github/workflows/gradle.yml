@@ -25,10 +25,4 @@ jobs:
 
       # 4) Запускаем тесты в headless-режиме
       - name: Build with Gradle
-        run: |
-          mkdir -p .chrome-profile
-          ./gradlew clean test --info \
-            -Dselenide.headless=true \
-            -Dselenide.browser=chrome \
-            -Dchromeoptions.args="--disable-dev-shm-usage,--no-sandbox,--headless,--remote-allow-origins=*,--disable-gpu,--user-data-dir=$(pwd)/.chrome-profile"
-            
+        run: ./gradlew test --info -Dselenide.headless=true

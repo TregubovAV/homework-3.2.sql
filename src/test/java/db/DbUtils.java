@@ -1,61 +1,65 @@
 package db;
 
-import java.sql.*;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbutils.QueryRunner;
+
+import java.sql.SQLException;
 import java.util.UUID;
 
 public class DbUtils {
+    private static final QueryRunner runner = new QueryRunner();
+    private static final BasicDataSource ds = new BasicDataSource();
+
+    static {
+        ds.setUrl("jdbc:mysql://localhost:3306/app");
+        ds.setUsername("app");
+        ds.setPassword("pass");
+    }
 
     public static void cleanDatabase() {
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/app", "app", "pass");
-             Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DELETE FROM auth_codes;");
-            stmt.executeUpdate("DELETE FROM card_transactions;");
-            stmt.executeUpdate("DELETE FROM cards;");
-            stmt.executeUpdate("DELETE FROM users;");
+        try (var conn = ds.getConnection()) {
+            runner.update(conn, "DELETE FROM auth_codes;");
+            runner.update(conn, "DELETE FROM card_transactions;");
+            runner.update(conn, "DELETE FROM cards;");
+            runner.update(conn, "DELETE FROM users;");
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при очистке базы данных", e);
         }
     }
 
-    public static void insertDemoUser() {
-        String userId = UUID.randomUUID().toString();
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/app", "app", "pass");
-             PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO users (id, login, password, status) VALUES (?, ?, ?, ?)")) {
-            stmt.setString(1, userId);
-            stmt.setString(2, "vasya");
-            stmt.setString(3, "$2a$10$78IOiKiwJVg51m9f2HE1G.y8bLeaNVaDlwPDVr1lMvuGNVex/2Vka"); // пароль: qwerty123
-            stmt.setString(4, "active");
-            stmt.executeUpdate();
+    public static void insertUser(String login, String password) {
+        var userId = UUID.randomUUID().toString();
+        var hashedPassword = "$2a$10$78IOiKiwJVg51m9f2HE1G.y8bLeaNVaDlwPDVr1lMvuGNVex/2Vka"; // пароль qwerty123
+        var sql = "INSERT INTO users (id, login, password, status) VALUES (?, ?, ?, ?)";
+
+        try (var conn = ds.getConnection()) {
+            runner.update(conn, sql, userId, login, hashedPassword, "active");
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при вставке демо-пользователя", e);
+            throw new RuntimeException("Ошибка при вставке пользователя", e);
         }
     }
 
     public static String getLatestVerificationCode() {
-        String code = "";
-        String query = "SELECT code FROM auth_codes ORDER BY created DESC LIMIT 1";
-
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/app", "app", "pass");
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-            if (rs.next()) {
-                code = rs.getString("code");
-            }
+        var sql = "SELECT code FROM auth_codes ORDER BY created DESC LIMIT 1";
+    
+        try (var conn = ds.getConnection()) {
+            return runner.query(conn, sql, resultSet -> {
+                if (resultSet.next()) {
+                    return resultSet.getString("code");
+                }
+                return "";
+            });
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при получении кода", e);
         }
-
-        return code;
     }
 
     public static String waitForVerificationCode() {
-        String code = "";
-        int retries = 10;
-        int delayMillis = 500;
+        var retries = 10;
+        var delayMillis = 500;
 
         for (int i = 0; i < retries; i++) {
-            code = getLatestVerificationCode();
+            var code = getLatestVerificationCode();
             if (!code.isEmpty()) {
                 return code;
             }

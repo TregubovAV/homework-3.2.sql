@@ -5,6 +5,8 @@ plugins {
 
 group 'ru.netology'
 version '1.0-SNAPSHOT'
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
 
 java {
     toolchain {
@@ -29,12 +31,13 @@ dependencies {
     testImplementation 'io.rest-assured:rest-assured:5.5.0'
     testImplementation 'com.google.code.gson:gson:2.10.1'
     testImplementation 'io.qameta.allure:allure-selenide:2.24.0'
+    testImplementation 'commons-dbutils:commons-dbutils:1.7' 
+    testImplementation 'org.apache.commons:commons-dbcp2:2.9.0'
+    testImplementation 'commons-dbutils:commons-dbutils:1.7'
 }
 
 test {
     useJUnitPlatform()
-    compileJava.options.encoding = "UTF-8"
-    compileTestJava.options.encoding = "UTF-8"
     systemProperty 'selenide.headless', System.getProperty('selenide.headless')
     systemProperty 'chromeoptions.prefs', System.getProperty('chromeoptions.prefs', "profile.password_manager_leak_detection=false")
 }

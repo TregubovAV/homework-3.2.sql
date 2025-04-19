@@ -1,92 +1,70 @@
 package test;
 
-import com.codeborne.selenide.Condition;
+import com.codeborne.selenide.logevents.SelenideLogger;
 import data.DataHelper;
 import db.DbUtils;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
-import com.codeborne.selenide.logevents.SelenideLogger;
+import com.codeborne.selenide.Condition;
 import io.qameta.allure.selenide.AllureSelenide;
-
-import org.junit.jupiter.api.BeforeAll;
+import pages.LoginPage;
 
 import static com.codeborne.selenide.Selenide.*;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class LoginTest {
 
     @BeforeAll
-    static void setUpAll() {
-        SelenideLogger.addListener("allure", new AllureSelenide()
-            .screenshots(true)
-            .savePageSource(true));
+    void beforeAll() {
+        SelenideLogger.addListener("allure", new AllureSelenide().screenshots(true).savePageSource(true));
     }
 
     @BeforeEach
-    void setup() {
-        DbUtils.cleanDatabase();
-        DbUtils.insertDemoUser();
+    void setUp() {
         open("http://localhost:9999");
+    }
+
+    @BeforeAll
+    static void insertUser() {
+        DbUtils.insertUser("vasya", "qwerty123");
+    }
+
+    @AfterAll
+    void afterAll() {
+        DbUtils.cleanDatabase();
     }
 
     @Test
     void shouldLoginSuccessfullyWithValidCredentials() {
+        var loginPage = new LoginPage();
         var authInfo = DataHelper.getVasya();
-
-        $("[data-test-id=login] input").setValue(authInfo.getLogin());
-        $("[data-test-id=password] input").setValue(authInfo.getPassword());
-        $("[data-test-id=action-login]").click();
-
+        var verificationPage = loginPage.validLogin(authInfo);
         var code = db.DbUtils.waitForVerificationCode();
-
-        $("[data-test-id=code] input").setValue(code);
-        $("[data-test-id=action-verify]").click();
-
+        verificationPage.validVerify(code);
         $("h2").shouldHave(Condition.text("Личный кабинет")).shouldBe(Condition.visible);
     }
 
     @Test
     void shouldShowErrorIfPasswordInvalid() {
+        var loginPage = new LoginPage();
         var invalidInfo = DataHelper.getInvalidPassword(DataHelper.getVasya());
-
-        $("[data-test-id=login] input").setValue(invalidInfo.getLogin());
-        $("[data-test-id=password] input").setValue(invalidInfo.getPassword());
-        $("[data-test-id=action-login]").click();
-
-        $("[data-test-id=error-notification] .notification__content")
-            .shouldBe(Condition.visible)
-            .shouldHave(Condition.text("Ошибка! Неверно указан логин или пароль"));
+        loginPage.invalidLogin(invalidInfo);
     }
 
     @Test
     void shouldShowErrorIfLoginInvalid() {
+        var loginPage = new LoginPage();
         var invalidInfo = DataHelper.getInvalidLogin();
-
-        $("[data-test-id=login] input").setValue(invalidInfo.getLogin());
-        $("[data-test-id=password] input").setValue(invalidInfo.getPassword());
-        $("[data-test-id=action-login]").click();
-
-        $("[data-test-id=error-notification] .notification__content")
-            .shouldBe(Condition.visible)
-            .shouldHave(Condition.text("Ошибка! Неверно указан логин или пароль"));
+        loginPage.invalidLogin(invalidInfo);
     }
 
     @Test
     void shouldShowErrorIfVerificationCodeInvalid() {
+        var loginPage = new LoginPage();
         var authInfo = DataHelper.getVasya();
-
-        $("[data-test-id=login] input").setValue(authInfo.getLogin());
-        $("[data-test-id=password] input").setValue(authInfo.getPassword());
-        $("[data-test-id=action-login]").click();
-
+        var verificationPage = loginPage.validLogin(authInfo);
         var wrongCode = DataHelper.getInvalidVerificationCode();
-
-        $("[data-test-id=code] input").setValue(wrongCode);
-        $("[data-test-id=action-verify]").click();
-
-        $("[data-test-id=error-notification] .notification__content")
-            .shouldBe(Condition.visible)
-            .shouldHave(Condition.text("Ошибка! Неверно указан код! Попробуйте ещё раз."));
+        verificationPage.invalidVerify(wrongCode);
     }
 
     @Test
@@ -96,22 +74,13 @@ public class LoginTest {
 
         for (int i = 0; i < 3; i++) {
             open("http://localhost:9999");
-            $("[data-test-id=login] input").setValue(invalidInfo.getLogin());
-            $("[data-test-id=password] input").setValue(invalidInfo.getPassword());
-            $("[data-test-id=action-login]").click();
-
-            $("[data-test-id=error-notification] .notification__content")
-                .shouldBe(Condition.visible)
-                .shouldHave(Condition.text("Ошибка! Неверно указан логин или пароль"));
+            var loginPage = new LoginPage();
+            loginPage.invalidLogin(invalidInfo);
         }
 
         open("http://localhost:9999");
-        $("[data-test-id=login] input").setValue(authInfo.getLogin());
-        $("[data-test-id=password] input").setValue(authInfo.getPassword());
-        $("[data-test-id=action-login]").click();
-
-        $("[data-test-id=error-notification] .notification__content")
-            .shouldBe(Condition.visible)
-            .shouldHave(Condition.text("Ошибка! Пользователь заблокирован"));
+        var loginPage = new LoginPage();
+        loginPage.invalidLogin(authInfo); // теперь пользователь должен быть заблокирован
+        loginPage.shouldBeBlocked();
     }
 }

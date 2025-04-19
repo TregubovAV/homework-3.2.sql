@@ -38,7 +38,7 @@ out/
 *.zip
 *.tar.gz
 *.rar
-!artifacts/app-ibank.jar
+!artifacts/app-deadline.jar
 
 ### Exclusions ###
 !gradle/wrapper/gradle-wrapper.jar

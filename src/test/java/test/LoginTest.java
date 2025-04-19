@@ -6,9 +6,21 @@ import db.DbUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.codeborne.selenide.logevents.SelenideLogger;
+import io.qameta.allure.selenide.AllureSelenide;
+
+import org.junit.jupiter.api.BeforeAll;
+
 import static com.codeborne.selenide.Selenide.*;
 
 public class LoginTest {
+
+    @BeforeAll
+    static void setUpAll() {
+        SelenideLogger.addListener("allure", new AllureSelenide()
+            .screenshots(true)
+            .savePageSource(true));
+    }
 
     @BeforeEach
     void setup() {

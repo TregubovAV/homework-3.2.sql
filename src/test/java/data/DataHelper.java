@@ -17,11 +17,15 @@ public class DataHelper {
         return new AuthInfo("vasya", "qwerty123");
     }
 
-    public static AuthInfo getInvalidPassword(AuthInfo authInfo) {
-        return new AuthInfo(authInfo.getLogin(), "wrong_password");
+    public static AuthInfo getInvalidPassword(AuthInfo validInfo) {
+        return new AuthInfo(validInfo.getLogin(), "wrong_password");
     }
 
     public static AuthInfo getInvalidLogin() {
-        return new AuthInfo("nonexistent", "qwerty123");
+        return new AuthInfo("invalid_user", "qwerty123");
+    }
+
+    public static String getInvalidVerificationCode() {
+        return "000000";
     }
 }

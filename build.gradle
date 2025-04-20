@@ -14,9 +14,6 @@ java {
     }
 }
 
-compileJava.options.encoding = "UTF-8"
-compileTestJava.options.encoding = "UTF-8"
-
 repositories {
     mavenCentral()
 }
@@ -28,12 +25,10 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.28'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
     testImplementation 'com.github.javafaker:javafaker:1.0.2'
-    testImplementation 'io.rest-assured:rest-assured:5.5.0'
     testImplementation 'com.google.code.gson:gson:2.10.1'
     testImplementation 'io.qameta.allure:allure-selenide:2.24.0'
     testImplementation 'commons-dbutils:commons-dbutils:1.7' 
     testImplementation 'org.apache.commons:commons-dbcp2:2.9.0'
-    testImplementation 'commons-dbutils:commons-dbutils:1.7'
 }
 
 test {

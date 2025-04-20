@@ -3,6 +3,8 @@ package db;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 
+import org.apache.commons.dbutils.handlers.ScalarHandler;
+
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -43,12 +45,7 @@ public class DbUtils {
         var sql = "SELECT code FROM auth_codes ORDER BY created DESC LIMIT 1";
     
         try (var conn = ds.getConnection()) {
-            return runner.query(conn, sql, resultSet -> {
-                if (resultSet.next()) {
-                    return resultSet.getString("code");
-                }
-                return "";
-            });
+            return runner.query(conn, sql, new ScalarHandler<>());
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при получении кода", e);
         }

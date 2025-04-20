@@ -5,9 +5,9 @@ import data.DataHelper;
 import db.DbUtils;
 import org.junit.jupiter.api.*;
 
-import com.codeborne.selenide.Condition;
 import io.qameta.allure.selenide.AllureSelenide;
 import pages.LoginPage;
+import pages.DashboardPage;
 
 import static com.codeborne.selenide.Selenide.*;
 
@@ -24,11 +24,6 @@ public class LoginTest {
         open("http://localhost:9999");
     }
 
-    @BeforeAll
-    static void insertUser() {
-        DbUtils.insertUser("vasya", "qwerty123");
-    }
-
     @AfterAll
     void afterAll() {
         DbUtils.cleanDatabase();
@@ -41,7 +36,7 @@ public class LoginTest {
         var verificationPage = loginPage.validLogin(authInfo);
         var code = db.DbUtils.waitForVerificationCode();
         verificationPage.validVerify(code);
-        $("h2").shouldHave(Condition.text("Личный кабинет")).shouldBe(Condition.visible);
+        new DashboardPage().shouldBeVisible();
     }
 
     @Test
